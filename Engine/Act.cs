@@ -1,17 +1,14 @@
 ﻿namespace Engine {
     public record Act {
-        public Act(params Action[] actions) {
-            foreach (Action action in actions) {
-                Used += action;
-            }
+        public Act(params EngineEvent[] events) {
+            Events = new() { EngineEvents = [..events] };
         }
 
         public required string Text { get; set; }
 
-        // event actions should be automatically removed after condition (one use, time, if), make like a class hierarchy or smth
-        public event Action? Used;
+        public EngineEventHandler Events { get; }
         protected virtual void OnUsed() {
-            Used?.Invoke();
+            Events.Invoke();
         }
 
         public virtual void Use() {
@@ -20,7 +17,7 @@
     }
 
     public record Act<NextScene> : Act where NextScene : Scene, new() {
-        public Act(params Action[] actions) : base(actions) {
+        public Act(params EngineEvent[] events) : base(events) {
         }
 
         public override void Use() {

@@ -4,7 +4,9 @@
         public override string Body => "Something's happening in Scene A";
         public override List<Act> Acts => [
             new Act<SceneB>(
-                () => Console.WriteLine("Action 1 in SceneA used")
+                new OneTimeEngineEvent() {
+                    Action = () => Console.WriteLine("Action 1 in SceneA used")
+                }
             ) {
                 Text = "Action 1"
             },
@@ -19,7 +21,9 @@
         public override string Body => "Something's happening in Scene B";
         public override List<Act> Acts => [
             new Act<SceneA>(
-                () => Console.WriteLine("Action 1 in SceneB used")
+                new OneTimeEngineEvent() {
+                    Action = () => Console.WriteLine("SceneA.Action1 used")
+                }
             ) {
                 Text = "Action 1"
             }
@@ -31,7 +35,9 @@
         public override string Body => "Something's happening in Scene B";
         public override List<Act> Acts => [
             new(
-                () => Engine.IsRunning = false
+                new OneTimeEngineEvent() {
+                    Action = () => Engine.IsRunning = false
+                }
             ) {
                 Text = "Action 1"
             }
