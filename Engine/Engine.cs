@@ -10,6 +10,7 @@
                 SceneChange?.Invoke();
             }
         }
+        public static List<string> Flags { get; } = [];
 
         public static event Action? SceneChange;
 

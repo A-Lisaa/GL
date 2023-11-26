@@ -16,7 +16,14 @@
         }
     }
 
+    public static class Conditionals {
+        public static Func<bool> HasFlag(string flag) {
+            return () => Engine.Flags.Contains(flag);
+        }
+    }
+
     // TODO: make condition classes for different built-in conditions and corresponding event handlers in Engine
+    // maybe, static class with condition methods
     public record ConditionalEngineEvent : EngineEvent {
         public required Func<bool> Condition { private get; init; }
 

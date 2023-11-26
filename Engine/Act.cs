@@ -1,7 +1,7 @@
 ﻿namespace Engine {
     public record Act {
         public Act(params EngineEvent[] events) {
-            Events = new() { EngineEvents = [..events] };
+            Events = new() { Events = [..events] };
         }
 
         public required string Text { get; set; }

@@ -46,9 +46,24 @@
 
     internal static class Program {
         public static void Main() {
-            Engine.CurrentScene = new SceneA();
+            //Engine.CurrentScene = new SceneA();
 
-            Engine.Run();
+            //Engine.Run();
+
+            Time time1 = new() {
+                Year = 2,
+                Hour = 4,
+                Minute = 15
+            };
+
+            Time time2 = new() {
+                Hour = 2,
+                Minute = 30
+            };
+
+            Time time3 = time1 + time2;
+
+            Console.WriteLine(time3);
         }
     }
 }
