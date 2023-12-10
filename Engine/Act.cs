@@ -1,4 +1,6 @@
-﻿namespace Engine {
+﻿using Engine.Events;
+
+namespace Engine {
     public record Act {
         public Act(params EngineEvent[] events) {
             Events = new() { Events = [..events] };
@@ -22,7 +24,7 @@
 
         public override void Use() {
             base.Use();
-            Engine.CurrentScene = new NextScene();
+            Game.State.CurrentScene = new NextScene();
         }
     }
  }
