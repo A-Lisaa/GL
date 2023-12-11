@@ -106,8 +106,7 @@ namespace Game {
             );
 
             Game game = new();
-
-            game.UI.Run();
+            game.Run();
         }
     }
 }

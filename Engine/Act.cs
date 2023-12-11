@@ -2,19 +2,16 @@
 
 namespace Engine {
     public record Act {
-        public Act(params EngineEvent[] events) {
-            Events = new() { Events = [..events] };
+        public Act(params EngineEvent[] onUseEvents) {
+            OnUse = new() { Events = [..onUseEvents] };
         }
 
         public required string Text { get; set; }
 
-        public EngineEventHandler Events { get; }
-        protected virtual void OnUsed() {
-            Events.Invoke();
-        }
+        public EngineEventHandler OnUse { get; }
 
         public virtual void Use() {
-            OnUsed();
+            OnUse.Invoke();
         }
     }
 

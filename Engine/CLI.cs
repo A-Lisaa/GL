@@ -24,12 +24,7 @@ namespace Engine.UI {
             return actNumber;
         }
 
-        // this method DEFINITELY shouldn't be there
         public override void Run() {
-            if (Game.State.CurrentScene is null) {
-                Log.Error("Game.State.CurrentScene is null, can't run");
-                return;
-            }
             while (Game.State.IsRunning) {
                 PrintScene(Game.State.CurrentScene);
                 int? input = GetInput();

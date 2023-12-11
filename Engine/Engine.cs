@@ -1,4 +1,6 @@
-﻿using Engine.Events;
+﻿using Serilog;
+
+using Engine.Events;
 using Engine.UI;
 
 namespace Engine {
@@ -7,5 +9,9 @@ namespace Engine {
         public static State State { get; } = new State();
         public static HashSet<string> Flags { get; } = [];
         public static EngineEventHandler Events { get; } = new();
+
+        public void Run() {
+            UI.Run();
+        }
     }
 }
