@@ -1,6 +1,8 @@
 ﻿namespace Engine.Events {
-    public class EngineEventHandler {
-        public List<EngineEvent> Events { private get; init; } = [];
+    public record EngineEventHandler {
+        // should it be HashSet or List?
+        // will HashSet even correctly handle EngineEvent? should investigate
+        public HashSet<EngineEvent> Events { private get; init; } = [];
 
         public event Action? Invoked;
 
@@ -8,15 +10,11 @@
             Events.Add(engineEvent);
         }
 
-        public void Remove(EngineEvent engineEvent) {
-            Events.Remove(engineEvent);
-        }
-
         public void Invoke() {
             foreach (var engineEvent in Events) {
                 engineEvent.Invoke();
             }
-            Events.RemoveAll(engineEvent => engineEvent.IsForDestruction);
+            Events.RemoveWhere(engineEvent => engineEvent.IsForDestruction);
             Invoked?.Invoke();
         }
     }

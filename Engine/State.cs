@@ -1,12 +1,10 @@
 ﻿using Serilog;
 
 namespace Engine {
-    public record State {
+    public class State {
         private sealed record EmptyScene : Scene {
             public override string Name => "Empty Technical Scene";
-
             public override string Body => "Nothing to see here";
-
             public override List<Act> Acts => [];
         }
         private Scene currentScene = new EmptyScene();
@@ -18,6 +16,7 @@ namespace Engine {
             set {
                 currentScene = value;
                 SceneChange?.Invoke();
+                Log.Debug($"CurrentScene changed to {value}");
             }
         }
 

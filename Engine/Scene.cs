@@ -8,11 +8,11 @@ namespace Engine {
 
         public virtual bool CanUseAct(int actNumber) {
             if (actNumber < 0) {
-                Log.Information("actNumber can't be less than 0");
+                Log.Error("actNumber can't be less than 0");
                 return false;
             }
             if (actNumber >= Acts.Count) {
-                Log.Information("actNumber is bigger than Acts.Count");
+                Log.Error($"actNumber is bigger than Acts.Count - 1 ({Acts.Count-1})");
                 return false;
             }
             return true;
@@ -22,7 +22,7 @@ namespace Engine {
             if (!CanUseAct(actNumber)) {
                 return;
             }
-            Log.Debug($"Using act {actNumber}");
+            Log.Debug($"Using act {actNumber} in Scene {Name}");
             Acts[actNumber].Use();
         }
     }

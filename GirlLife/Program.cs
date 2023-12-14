@@ -5,7 +5,7 @@ using Engine.UI;
 using Serilog;
 
 namespace Game {
-    public record State : Engine.State {
+    public class State : Engine.State {
     }
 
     public class Game : Engine.Game {
@@ -90,10 +90,30 @@ namespace Game {
     }
 
     internal static class Program {
-        public static void Main() {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
+        public static Serilog.Core.Logger GetLogger(bool debugEnabled = false, bool consoleLog = false) {
+            var loggerConfiguration = new LoggerConfiguration();
+
+            if (consoleLog) {
+                loggerConfiguration.WriteTo.Console();
+            }
+            else {
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                // I suspect that retainedFileCountLimit doesn't work, and we don't want like 1488 log files
+                loggerConfiguration.WriteTo.File($"logs/{timestamp}.log", retainedFileCountLimit: 5);
+            }
+
+#if DEBUG
+            loggerConfiguration.MinimumLevel.Debug();
+#endif
+            if (debugEnabled) {
+                loggerConfiguration.MinimumLevel.Debug();
+            }
+
+            return loggerConfiguration.CreateLogger();
+        }
+
+        public static void Main(string[] args) {
+            Log.Logger = GetLogger(args.Contains("--debug"), args.Contains("--consoleLog"));
 
             Game.State.CurrentScene = new SceneA();
 

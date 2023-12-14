@@ -14,25 +14,21 @@ namespace Engine.UI {
             }
         }
 
-        // should it just return input though?
-        public override int? GetInput() {
-            string? input = Console.ReadLine();
-            if (!int.TryParse(input, out int actNumber)) {
-                Log.Information("Invalid input");
-                return null;
-            }
-            return actNumber;
-        }
-
         public override void Run() {
             while (Game.State.IsRunning) {
                 PrintScene(Game.State.CurrentScene);
-                int? input = GetInput();
+                Console.Write("Enter the act number: ");
+                string? input = Console.ReadLine();
                 if (input is null) {
                     Log.Debug("input is null, can't use");
                     continue;
                 }
-                Game.State.CurrentScene.UseAct((int)input);
+                if (!int.TryParse(input, out int actNumber)) {
+                    Log.Information("Invalid input");
+                    continue;
+                }
+                Game.State.CurrentScene.UseAct(actNumber);
+                // should the global events be called in there? we'll have to change things like this in every UI child
                 Game.Events.Invoke();
             }
         }
