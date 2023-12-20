@@ -28,17 +28,25 @@
         }
 
         public static Func<bool> Any(params Func<bool>[] conditions) {
-            return () => {
-                return (
-                    from condition in conditions
-                    where condition.Invoke()
-                    select condition
-                ).Any();
-            };
+            return () => Array.Exists(conditions, (condition) => condition.Invoke());
         }
 
         public static Func<bool> Always() {
             return () => true;
+        }
+
+        // it should be global otherwise we'll get a bunch of FireNTimes for each scene creation
+        private static int lastNTimesIndex;
+        public static Func<bool> NTimes(int times) {
+            string currentNTimesName = $"FireNTimes{lastNTimesIndex++}";
+            Game.Counters.TryAdd(currentNTimesName, 0);
+            return () => {
+                if (++Game.Counters[currentNTimesName] == times) {
+                    Game.Counters.Remove(currentNTimesName);
+                    return true;
+                }
+                return false;
+            };
         }
 
         public static Func<bool> HasFlag(string flag) {
@@ -76,17 +84,26 @@
         }
 
         public static Func<bool> Any(params Func<bool>[] conditions) {
-            return () => {
-                return (
-                    from condition in conditions
-                    where condition.Invoke()
-                    select condition
-                ).Any();
-            };
+            return () => Array.Exists(conditions, (condition) => condition.Invoke());
         }
 
+        // should it be a case of NTimes? probably not to not read/write to Game.Counters
         public static Func<bool> OneTime() {
             return () => true;
+        }
+
+        // shouldn't be common as Destruiction and Fire shall have different hames in Counters
+        private static int lastNTimesIndex;
+        public static Func<bool> NTimes(int times) {
+            string currentNTimesName = $"DestructionNTimes{lastNTimesIndex++}";
+            Game.Counters.TryAdd(currentNTimesName, 0);
+            return () => {
+                if (++Game.Counters[currentNTimesName] == times) {
+                    Game.Counters.Remove(currentNTimesName);
+                    return true;
+                }
+                return false;
+            };
         }
 
         public static Func<bool> Never() {

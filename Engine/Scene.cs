@@ -5,6 +5,7 @@ namespace Engine {
         public abstract string Name { get; }
         public abstract string Body { get; }
         public abstract List<Act> Acts { get; }
+        // size of empty EngineEventHandler? if 0, maybe make static EEH for Enter/Exit or smth, could do that in other parts
 
         public virtual bool CanUseAct(int actNumber) {
             if (actNumber < 0) {

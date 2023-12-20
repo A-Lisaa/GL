@@ -5,12 +5,8 @@ using Engine.UI;
 using Serilog;
 
 namespace Game {
-    public class State : Engine.State {
-    }
-
     public class Game : Engine.Game {
         public override BaseUI UI { get; } = new CLI();
-        public static Dictionary<string, int> Counters { get; } = [];
     }
 
     internal record SceneA : Scene {
@@ -35,11 +31,8 @@ namespace Game {
                 new EngineEvent() {
                     FireCondition = FireConditions.Always(),
                     Action = () => {
-                        if (!Game.Counters.TryGetValue("ABTimes", out int _)) {
-                            Game.Counters["ABTimes"] = 0;
-                        }
-                        Game.Counters["ABTimes"]++;
-                        CLIActions.Print($"Went to SceneB from SceneA {Game.Counters["ABTimes"]} times")();
+                        Game.Counters.TryAdd("ABTimes", 0);
+                        CLIActions.Print($"Went to SceneB from SceneA {++Game.Counters["ABTimes"]} times")();
                     }
                 }
             ) {
@@ -121,7 +114,7 @@ namespace Game {
                 new EngineEvent() {
                     FireCondition = FireConditions.HasNoFlag("SceneAAction2Run"),
                     Action = CLIActions.Print("SceneAAction2Run hasn't been set"),
-                    DestructionCondition = DestructionConditions.HasFlag("SceneAAction2Run")
+                    DestructionCondition = DestructionConditions.HasFlag("SceneAAction2Run"),
                 }
             );
 
