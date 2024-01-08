@@ -1,9 +1,11 @@
-﻿namespace Engine.Events {
-    public record EngineEvent {
-        // returns true when the event is to be invoked
-        public required Func<bool> FireCondition { private get; init; }
+﻿using System.Collections;
 
-        public required Action Action { private get; init; }
+namespace Engine.Events {
+    public record EngineEvent : IComparable<EngineEvent> {
+        // returns true when the event is to be invoked
+        public required Func<bool> FireCondition { protected get; init; }
+
+        public required Action Action { protected get; init; }
 
         // 1) returns true when the event is to be destructed
         // 2) default set to OneTime seems like a good idea to avoid stupids setting it to Never
@@ -14,9 +16,23 @@
         // probably not as IsForDestruction could be set by smth else
         public bool IsForDestruction { get; protected set; }
 
+        // priority in which the event will be invoked be event handler, the lower the earlier
+        public int Priority { get; init; }
+
+        // Action will be invoked this amount of times on each event invocation,
+        // it's this way so that we don't need to create multiple identical events
+        public int TimesToInvokeAction { get; set; } = 1;
+
+        public int CompareTo(EngineEvent? other) {
+            if (other == null) return 1;
+            return Priority.CompareTo(other.Priority);
+        }
+
         public virtual void Invoke() {
             if (FireCondition.Invoke()) {
-                Action.Invoke();
+                for (int i = 0; i < TimesToInvokeAction; i++) {
+                    Action.Invoke();
+                }
             }
             IsForDestruction = DestructionCondition.Invoke();
         }
@@ -35,6 +51,7 @@
             return () => true;
         }
 
+        // move to Game when works
         // it should be global otherwise we'll get a bunch of FireNTimes for each scene creation
         private static int lastNTimesIndex;
         public static Func<bool> NTimes(int times) {
@@ -48,14 +65,6 @@
                 return false;
             };
         }
-
-        public static Func<bool> HasFlag(string flag) {
-            return () => Game.Flags.Contains(flag);
-        }
-
-        public static Func<bool> HasNoFlag(string flag) {
-            return () => !Game.Flags.Contains(flag);
-        }
     }
 
     public static class Actions {
@@ -65,14 +74,6 @@
                     action.Invoke();
                 }
             };
-        }
-
-        public static Action SetFlag(string flag) {
-            return () => Game.Flags.Add(flag);
-        }
-
-        public static Action DeleteFlag(string flag) {
-            return () => Game.Flags.Remove(flag);
         }
     }
 
@@ -108,14 +109,6 @@
 
         public static Func<bool> Never() {
             return () => false;
-        }
-
-        public static Func<bool> HasFlag(string flag) {
-            return () => Game.Flags.Contains(flag);
-        }
-
-        public static Func<bool> HasNoFlag(string flag) {
-            return () => !Game.Flags.Contains(flag);
         }
     }
 }

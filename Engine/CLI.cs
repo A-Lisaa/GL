@@ -1,9 +1,16 @@
 ﻿using Serilog;
 
 namespace Engine.UI {
+    // specific UIs internals shouldn't be visible to other assemblies
 #pragma warning disable S101
     public class CLI : BaseUI {
 #pragma warning restore S101
+        public static class Actions {
+            public static Action Print(string str) {
+                return () => Console.WriteLine(str);
+            }
+        }
+
         private static void PrintScene(Scene scene) {
             Console.WriteLine($"Name = {scene.Name}");
             Console.WriteLine($"Body = {scene.Body}");
@@ -28,21 +35,13 @@ namespace Engine.UI {
                     continue;
                 }
                 if (!int.TryParse(input, out int actNumber)) {
-                    Log.Information("Invalid input");
+                    Log.Information("Input is not an integer");
                     continue;
                 }
                 Game.State.CurrentScene.UseAct(actNumber);
                 // should the global events be called in there? we'll have to change things like this in every UI child
                 Game.Events.Invoke();
             }
-        }
-    }
-
-#pragma warning disable S101
-    public static class CLIActions {
-#pragma warning restore S101
-        public static Action Print(string str) {
-            return () => Console.WriteLine(str);
         }
     }
 }

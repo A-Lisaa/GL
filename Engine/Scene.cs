@@ -7,13 +7,9 @@ namespace Engine {
         public abstract List<Act> Acts { get; }
         // size of empty EngineEventHandler? if 0, maybe make static EEH for Enter/Exit or smth, could do that in other parts
 
-        public virtual bool CanUseAct(int actNumber) {
-            if (actNumber < 0) {
-                Log.Error("actNumber can't be less than 0");
-                return false;
-            }
-            if (actNumber >= Acts.Count) {
-                Log.Error($"actNumber is bigger than Acts.Count - 1 ({Acts.Count-1})");
+        protected virtual bool CanUseAct(int actNumber) {
+            if (actNumber < 0 || actNumber >= Acts.Count) {
+                Log.Error("actNumber out of bounds (< 0 or >= Acts.Count)");
                 return false;
             }
             return true;

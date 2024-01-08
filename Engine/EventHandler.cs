@@ -1,9 +1,9 @@
 ﻿namespace Engine.Events {
     // make an excel table of different events with descriptions and tags for finding appropriate one
     public record EngineEventHandler {
-        // should it be HashSet or List?
-        // will HashSet even correctly handle EngineEvent? should investigate
-        public HashSet<EngineEvent> Events { private get; init; } = [];
+        // should it be SortedSet or List?
+        // will SortedSet even correctly handle EngineEvent? should investigate
+        public SortedSet<EngineEvent> Events { private get; init; } = [];
 
         public event Action? Invoked;
 

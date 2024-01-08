@@ -16,23 +16,36 @@ namespace Game {
             new Act<SceneB>(
                 new EngineEvent() {
                     FireCondition = FireConditions.Always(),
-                    Action = CLIActions.Print("Went to SceneB from SceneA")
+                    Action = CLI.Actions.Print("This should be after 'went to'"),
+                    Priority = 1,
+                    TimesToInvokeAction = 2
+                },
+                new EngineEvent() {
+                    FireCondition = FireConditions.Always(),
+                    Action = CLI.Actions.Print("Went to SceneB from SceneA")
+                },
+                new EngineEvent() {
+                    FireCondition = FireConditions.Always(),
+                    Action = CLI.Actions.Print("This should be before 'went to'"),
+                    Priority = -1,
+                    TimesToInvokeAction = 3
                 },
                 new EngineEvent() {
                     FireCondition = FireConditions.All(
-                        FireConditions.HasFlag("SceneAAction2Run"),
-                        FireConditions.HasNoFlag("SceneAAction2RunShowed")
+                        Game.FireConditions.HasFlag("SceneAAction2Run"),
+                        Game.FireConditions.HasNoFlag("SceneAAction2RunShowed")
                     ),
                     Action = Actions.Chain(
-                        CLIActions.Print("Scene C was executed before"),
-                        Actions.SetFlag("SceneAAction2RunShowed")
+                        // using specific UI member is kinda stupid when we want to change them
+                        CLI.Actions.Print("Scene C was executed before"),
+                        Game.Actions.SetFlag("SceneAAction2RunShowed")
                     )
                 },
                 new EngineEvent() {
                     FireCondition = FireConditions.Always(),
                     Action = () => {
                         Game.Counters.TryAdd("ABTimes", 0);
-                        CLIActions.Print($"Went to SceneB from SceneA {++Game.Counters["ABTimes"]} times")();
+                        CLI.Actions.Print($"Went to SceneB from SceneA {++Game.Counters["ABTimes"]} times")();
                     }
                 }
             ) {
@@ -40,8 +53,8 @@ namespace Game {
             },
             new Act<SceneC>(
                 new EngineEvent() {
-                    FireCondition = FireConditions.HasNoFlag("SceneAAction2Run"),
-                    Action = Actions.SetFlag("SceneAAction2Run")
+                    FireCondition = Game.FireConditions.HasNoFlag("SceneAAction2Run"),
+                    Action = Game.Actions.SetFlag("SceneAAction2Run")
                 }
             ) {
                 Text = "To SceneC"
@@ -56,7 +69,7 @@ namespace Game {
             new Act<SceneA>(
                 new EngineEvent() {
                     FireCondition = FireConditions.Always(),
-                    Action = CLIActions.Print("Went to SceneA from SceneB")
+                    Action = CLI.Actions.Print("Went to SceneA from SceneB")
                 }
             ) {
                 Text = "To SceneA"
@@ -71,7 +84,7 @@ namespace Game {
             new Act(
                 new EngineEvent() {
                     FireCondition = FireConditions.Always(),
-                    Action = StateActions.StopRunning()
+                    Action = State.Actions.StopRunning()
                 }
             ) {
                 Text = "Stop"
@@ -112,9 +125,9 @@ namespace Game {
 
             Game.Events.Add(
                 new EngineEvent() {
-                    FireCondition = FireConditions.HasNoFlag("SceneAAction2Run"),
-                    Action = CLIActions.Print("SceneAAction2Run hasn't been set"),
-                    DestructionCondition = DestructionConditions.HasFlag("SceneAAction2Run"),
+                    FireCondition = Game.FireConditions.HasNoFlag("SceneAAction2Run"),
+                    Action = CLI.Actions.Print("SceneAAction2Run hasn't been set"),
+                    DestructionCondition = Game.DestructionConditions.HasFlag("SceneAAction2Run"),
                 }
             );
 

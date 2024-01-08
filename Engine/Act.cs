@@ -13,7 +13,7 @@ namespace Engine {
         // conflict with each other, on the other hand if we add events to List, a bunch of events might unwantedly outlive the scene
         // (though if we set DestructionCondition to something sensible, they probably shouldn't, need more thought on that)
         // also if we set DestructionCondition to not OneTime, they'll remain in the List and on each Scene creation there'll be more
-        public EngineEventHandler OnUse { get; }
+        public EngineEventHandler OnUse { get; init; }
 
         public virtual void Use() {
             OnUse.Invoke();

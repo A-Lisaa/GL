@@ -2,6 +2,16 @@
 
 namespace Engine {
     public class State {
+        public static class Actions {
+            public static Action StopRunning() {
+                return () => Game.State.IsRunning = false;
+            }
+
+            public static Action ChangeScene(Scene scene) {
+                return () => Game.State.CurrentScene = scene;
+            }
+        }
+
         private sealed record EmptyScene : Scene {
             public override string Name => "Empty Technical Scene";
             public override string Body => "Nothing to see here";
@@ -21,15 +31,5 @@ namespace Engine {
         }
 
         public event Action? SceneChange;
-    }
-
-    public static class StateActions {
-        public static Action StopRunning() {
-            return () => Game.State.IsRunning = false;
-        }
-
-        public static Action ChangeScene(Scene scene) {
-            return () => Game.State.CurrentScene = scene;
-        }
     }
 }
