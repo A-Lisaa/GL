@@ -1,32 +1,60 @@
 ﻿using Engine.Events;
 
+using Serilog;
+
 namespace Engine {
     public record Act {
+        private Scene? nextScene;
+        private Location? nextLocation;
+
         public Act(params EngineEvent[] onUseEvents) {
-            OnUse = new() { Events = [..onUseEvents] };
+            OnUse = new(onUseEvents);
+        }
+
+        public Act(Scene nextScene, params EngineEvent[] onUseEvents) : this(onUseEvents) {
+            NextScene = nextScene;
+        }
+
+        public Act(string nextScene, params EngineEvent[] onUseEvents) : this(onUseEvents) {
+            OnUse.Add(new EngineEvent() {
+                Action = () => NextScene = Scene.GetScene(nextScene)
+            });
         }
 
         public required string Text { get; set; }
+        public Scene? NextScene {
+            get => nextScene;
+            set {
+                if (nextLocation != null) {
+                    Log.Error("Can't set NextScene and NextLocation");
+                    return;
+                }
+                nextScene = value;
+            }
+        }
+        public Location? NextLocation {
+            get => nextLocation;
+            set {
+                if (nextScene != null) {
+                    Log.Error("Can't set NextScene and NextLocation");
+                    return;
+                }
+                nextLocation = value;
+            }
+        }
+        public bool IsActive { get; set; } = true;
 
-        // make some way for scenes to set events with life longer the scene itself, although that brings problems:
-        // 1) if we just add all the events to global events HashSet, events with same callback will PROBABLY (investigate)
-        // conflict with each other, on the other hand if we add events to List, a bunch of events might unwantedly outlive the scene
-        // (though if we set DestructionCondition to something sensible, they probably shouldn't, need more thought on that)
-        // also if we set DestructionCondition to not OneTime, they'll remain in the List and on each Scene creation there'll be more
-        public EngineEventHandler OnUse { get; init; }
+        public bool HasNextScene() {
+            return NextScene != null;
+        }
+
+        public EngineEventHandler OnUse { get; }
 
         public virtual void Use() {
             OnUse.Invoke();
+            if (NextScene != null) {
+                Scene.Current = NextScene;
+            }
         }
     }
-
-    public record Act<NextScene> : Act where NextScene : Scene, new() {
-        public Act(params EngineEvent[] events) : base(events) {
-        }
-
-        public override void Use() {
-            base.Use();
-            Game.State.CurrentScene = new NextScene();
-        }
-    }
- }
+}
