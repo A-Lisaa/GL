@@ -1,56 +1,47 @@
 ﻿using Engine.Events;
+using Engine.Interfaces;
 
 using Serilog;
 
+using System.Collections.Generic;
+
 namespace Engine {
-    public partial record Scene {
+    public partial record Scene : IRegistrable<Scene> {
         public static Scene Chain(params Scene[] scenes) {
             for (int i = 0; i < scenes.Length - 1; i++) {
-                scenes[i].Acts.Insert(0, new Act(scenes[i + 1]) { Text = "Continue" });
+                scenes[i].Acts.Insert(0, new Act<Scene>() { Text = "Continue", Next = scenes[i+1] });
             }
             return scenes[0];
         }
 
-        private static Scene current = new() {
-            Name = "Techical Scene",
-            Body = "Nothing to see here",
-            Acts = [
-                new Act(
-                    new EngineEvent() {
-                        FireCondition = EngineEvent.FireConditions.Always(),
-                        Action = State.Actions.StopRunning()
-                    }
-                ) {
-                    Text = "Exit"
-                }
-            ]
-        };
+        public static Dictionary<string, Scene> Instances { get; set; } = [];
 
-        public static EngineEventHandler SceneChange { get; } = new();
-
-        public static Scene Current {
-            get => current;
-            set {
-                current = value;
-                SceneChange.Invoke();
+        public static Observable<Scene> Current => new(
+            new Scene() {
+                Name = "Technical Scene",
+                Body = "Nothing to see here",
+                Acts = [
+                    new Act(new EngineEvent() { Action = () => State.Actions.StopRunning() }) { Text = "Stop" }
+                ]
             }
-        }
+        );
 
-        private readonly static Dictionary<string, Scene> scenes = [];
+        public static List<Scene> AllInstances => [.. Instances.Values];
 
         public bool Register(string id) {
-            if (!scenes.TryAdd(id, this)) {
-                Log.Error($"Scene with id {id} is already registered");
+            if (!Instances.TryAdd(id, this)) {
+                Log.Error($"Scene with id = {id} is already registered");
                 return false;
             }
             return true;
         }
 
-        public static Scene GetScene(string id) {
-            return scenes[id];
+        public static Scene GetInstance(string id) {
+            if (!Instances.TryGetValue(id, out var instance)) {
+                throw new NotRegisteredException($"Scene with id = {id} isn't registered");
+            }
+            return instance;
         }
-
-        public static List<Scene> AllScenes => [.. scenes.Values];
 
         public required string Body { get; set; }
         public string Name { get; set; } = "";

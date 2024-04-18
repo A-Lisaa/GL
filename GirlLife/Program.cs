@@ -10,7 +10,7 @@ namespace GirlLife {
         public static void Main(string[] args) {
             Log.Logger = Logger.GetLogger(args.Contains("--debug"), args.Contains("--consoleLog"));
 
-            Location.Current = Location.GetLocation("myRoom");
+            Location.Current.Value = Location.GetInstance("myRoom");
 
             Game game = new();
             game.Run();

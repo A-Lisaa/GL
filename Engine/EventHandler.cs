@@ -19,6 +19,11 @@
             Add(new EngineEvent() { Action = action });
         }
 
+        public void AddRange(IEnumerable<EngineEvent> engineEvents) {
+            events.AddRange(engineEvents);
+            events.Sort();
+        }
+
         public void Invoke() {
             foreach (var engineEvent in events) {
                 engineEvent.Invoke();

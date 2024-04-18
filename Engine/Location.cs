@@ -1,15 +1,16 @@
 ﻿using Engine.Events;
+using Engine.Interfaces;
 
 using Serilog;
 
 namespace Engine {
-    public record Location {
+    public record Location : IRegistrable<Location> {
         private void AddPassagesToActs() {
             Acts.InsertRange(0,
                 from passage in Passages
-                select new Act() {
+                select new Act<Location>() {
                     Text = $"To {passage.Name}",
-                    NextLocation = passage
+                    Next = passage
                 }
             );
         }
@@ -18,64 +19,46 @@ namespace Engine {
             OnRegistration.Add(AddPassagesToActs);
         }
 
-        // this is similar to Scene
+        public static Dictionary<string, Location> Instances { get; set; } = [];
 
-        private static Location current = new() {
-            Name = "Technical Location",
-            Body = "Nothing to see here",
-            Acts = [
-                new Act(
-                    new EngineEvent() {
-                        FireCondition = EngineEvent.FireConditions.Always(),
-                        Action = State.Actions.StopRunning()
-                    }
-                ) {
-                    Text = "Exit"
-                }
-            ]
-        };
-
-        public static EngineEventHandler LocationChange { get; } = new();
-
-        public static Location Current {
-            get => current;
-            set {
-                current = value;
-                LocationChange.Invoke();
+        public static Observable<Location> Current => new(
+            new Location() {
+                Name = "Technical Scene",
+                Body = "Nothing to see here",
+                Acts = [
+                    new Act(new EngineEvent() { Action = () => State.Actions.StopRunning() }) { Text = "Stop" }
+                ]
             }
-        }
+        );
 
-        private readonly static Dictionary<string, Location> locations = [];
-
-        public EngineEventHandler OnRegistration { get; } = new();
+        public static List<Location> AllInstances => [.. Instances.Values];
 
         public bool Register(string id) {
-            if (!locations.TryAdd(id, this)) {
-                Log.Error($"Location with id {id} is already registered");
+            if (!Instances.TryAdd(id, this)) {
+                Log.Error($"Location with id = {id} is already registered");
                 return false;
             }
-            OnRegistration.Invoke();
             return true;
         }
 
-        public static Location GetLocation(string id) {
-            return locations[id];
+        public static Location GetInstance(string id) {
+            if (!Instances.TryGetValue(id, out var instance)) {
+                throw new NotRegisteredException($"Location with id = {id} isn't registered");
+            }
+            return instance;
         }
-
-        public static List<Location> AllLocations => [.. locations.Values];
 
         public required string Name { get; set; }
         public required string Body { get; set; }
         public List<Act> Acts { get; init; } = [];
         public List<Location> Passages { get; init; } = [];
 
+        public EngineEventHandler OnRegistration { get; } = new();
         public EngineEventHandler OnEnter { get; } = new();
         public EngineEventHandler OnExit { get; } = new();
 
         public static void Move(Location destination) {
-            Current.OnExit.Invoke();
-            Current = destination;
-            Current.OnEnter.Invoke();
+            Current.Value = destination;
         }
 
         public void UseAct(int actNumber) {

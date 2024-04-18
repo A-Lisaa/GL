@@ -1,0 +1,8 @@
+[*.cs]
+# these warnings are not viable for Actions/Conditions
+# classes that don't inherit anything are still non-static to be in line with every other
+dotnet_diagnostic.RCS1102.severity = none
+# classes that don't inherit anything are still non-static to be in line with every other
+dotnet_diagnostic.S1118.severity = none
+# empty classes may just inherit CommonConditions for example
+dotnet_diagnostic.S2094.severity = none

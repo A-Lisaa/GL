@@ -1,60 +1,39 @@
 ﻿using Engine.Events;
-
-using Serilog;
+using Engine.Interfaces;
 
 namespace Engine {
     public record Act {
-        private Scene? nextScene;
-        private Location? nextLocation;
-
         public Act(params EngineEvent[] onUseEvents) {
             OnUse = new(onUseEvents);
         }
 
-        public Act(Scene nextScene, params EngineEvent[] onUseEvents) : this(onUseEvents) {
-            NextScene = nextScene;
-        }
-
-        public Act(string nextScene, params EngineEvent[] onUseEvents) : this(onUseEvents) {
-            OnUse.Add(new EngineEvent() {
-                Action = () => NextScene = Scene.GetScene(nextScene)
-            });
-        }
-
         public required string Text { get; set; }
-        public Scene? NextScene {
-            get => nextScene;
-            set {
-                if (nextLocation != null) {
-                    Log.Error("Can't set NextScene and NextLocation");
-                    return;
-                }
-                nextScene = value;
-            }
-        }
-        public Location? NextLocation {
-            get => nextLocation;
-            set {
-                if (nextScene != null) {
-                    Log.Error("Can't set NextScene and NextLocation");
-                    return;
-                }
-                nextLocation = value;
-            }
-        }
         public bool IsActive { get; set; } = true;
 
-        public bool HasNextScene() {
-            return NextScene != null;
-        }
-
-        public EngineEventHandler OnUse { get; }
+        public EngineEventHandler OnUse { get; } = new();
 
         public virtual void Use() {
             OnUse.Invoke();
-            if (NextScene != null) {
-                Scene.Current = NextScene;
-            }
+        }
+    }
+
+    public record Act<T> : Act where T : IRegistrable<T> {
+        public Act(params EngineEvent[] onUseEvents) : base(onUseEvents) { }
+
+        public Act(T next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+            Next = next;
+        }
+
+        public Act(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+            // Next is set on first use so that T object can be created before
+            OnUse.Add(() => Next = T.GetInstance(next));
+        }
+
+        public required T Next { get; set; }
+
+        public override void Use() {
+            base.Use();
+            T.Current.Value = Next;
         }
     }
 }

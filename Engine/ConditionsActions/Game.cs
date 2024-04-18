@@ -16,7 +16,7 @@ namespace Engine {
 
         }
 
-        public static class Actions {
+        public class Actions {
             public static Action SetFlag(string flag) {
                 return () => Flags.Add(flag);
             }
