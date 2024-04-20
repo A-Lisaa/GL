@@ -12,9 +12,7 @@ namespace Engine {
             }
         }
 
-        public class FireConditions : CommonConditions {
-
-        }
+        public class FireConditions : CommonConditions;
 
         public class Actions {
             public static Action SetFlag(string flag) {
@@ -28,9 +26,12 @@ namespace Engine {
             public static Action AddEvent(EngineEvent @event) {
                 return () => Events.Add(@event);
             }
+
+            public static Action StopRunning() {
+                return () => IsRunning = false;
+            }
         }
 
-        public class DestructionConditions : CommonConditions {
-        }
+        public class DestructionConditions : CommonConditions;
     }
 }

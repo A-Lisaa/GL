@@ -3,8 +3,6 @@ using Engine.Interfaces;
 
 using Serilog;
 
-using System.Collections.Generic;
-
 namespace Engine {
     public partial record Scene : IRegistrable<Scene> {
         public static Scene Chain(params Scene[] scenes) {
@@ -21,26 +19,19 @@ namespace Engine {
                 Name = "Technical Scene",
                 Body = "Nothing to see here",
                 Acts = [
-                    new Act(new EngineEvent() { Action = () => State.Actions.StopRunning() }) { Text = "Stop" }
+                    new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
                 ]
             }
         );
 
-        public static List<Scene> AllInstances => [.. Instances.Values];
+        public static List<Scene> AllInstances => IRegistrable<Scene>.allInstances;
 
         public bool Register(string id) {
-            if (!Instances.TryAdd(id, this)) {
-                Log.Error($"Scene with id = {id} is already registered");
-                return false;
-            }
-            return true;
+            return ((IRegistrable<Scene>)this).register(id);
         }
 
         public static Scene GetInstance(string id) {
-            if (!Instances.TryGetValue(id, out var instance)) {
-                throw new NotRegisteredException($"Scene with id = {id} isn't registered");
-            }
-            return instance;
+            return IRegistrable<Scene>.getInstance(id);
         }
 
         public required string Body { get; set; }
@@ -48,6 +39,7 @@ namespace Engine {
         public List<Act> Acts { get; init; } = [];
 
         public EngineEventHandler OnStart { get; } = new();
+        public EngineEventHandler OnRegistration { get; } = new();
 
         public void UseAct(int actNumber) {
             if (actNumber < 0 || actNumber >= Acts.Count) {

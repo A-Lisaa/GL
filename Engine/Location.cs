@@ -4,6 +4,7 @@ using Engine.Interfaces;
 using Serilog;
 
 namespace Engine {
+    // merge Location and Scene
     public record Location : IRegistrable<Location> {
         private void AddPassagesToActs() {
             Acts.InsertRange(0,
@@ -19,33 +20,24 @@ namespace Engine {
             OnRegistration.Add(AddPassagesToActs);
         }
 
-        public static Dictionary<string, Location> Instances { get; set; } = [];
-
         public static Observable<Location> Current => new(
             new Location() {
                 Name = "Technical Scene",
                 Body = "Nothing to see here",
                 Acts = [
-                    new Act(new EngineEvent() { Action = () => State.Actions.StopRunning() }) { Text = "Stop" }
+                    new Act(new EngineEvent() { Action = () => Game.Actions.StopRunning() }) { Text = "Stop" }
                 ]
             }
         );
 
-        public static List<Location> AllInstances => [.. Instances.Values];
+        public static List<Location> AllInstances => IRegistrable<Location>.allInstances;
 
         public bool Register(string id) {
-            if (!Instances.TryAdd(id, this)) {
-                Log.Error($"Location with id = {id} is already registered");
-                return false;
-            }
-            return true;
+            return ((IRegistrable<Location>)this).register(id);
         }
 
         public static Location GetInstance(string id) {
-            if (!Instances.TryGetValue(id, out var instance)) {
-                throw new NotRegisteredException($"Location with id = {id} isn't registered");
-            }
-            return instance;
+            return IRegistrable<Location>.getInstance(id);
         }
 
         public required string Name { get; set; }
@@ -53,9 +45,9 @@ namespace Engine {
         public List<Act> Acts { get; init; } = [];
         public List<Location> Passages { get; init; } = [];
 
-        public EngineEventHandler OnRegistration { get; } = new();
         public EngineEventHandler OnEnter { get; } = new();
         public EngineEventHandler OnExit { get; } = new();
+        public EngineEventHandler OnRegistration { get; } = new();
 
         public static void Move(Location destination) {
             Current.Value = destination;

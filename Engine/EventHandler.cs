@@ -1,8 +1,11 @@
-﻿namespace Engine.Events {
+﻿using System.Collections.ObjectModel;
+
+namespace Engine.Events {
     // make an excel table of different events with descriptions and tags for finding appropriate one
     public partial class EngineEventHandler {
         public EngineEventHandler(params EngineEvent[] engineEvents) {
             events = [.. engineEvents];
+            // sorting each time something is changed seems pointless, maybe ObservableList?
             events.Sort();
         }
 

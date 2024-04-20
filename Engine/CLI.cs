@@ -34,7 +34,7 @@ namespace Engine.UI {
 
         // rewrite this method and its use
         public override void Run() {
-            while (Game.State.IsRunning) {
+            while (Game.IsRunning) {
                 Console.WriteLine("--------------------------------------------------------------------------------------");
                 PrintScene(Scene.Current.Value);
                 Console.WriteLine("--------------------------------------------------------------------------------------");
