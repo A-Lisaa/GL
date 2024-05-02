@@ -1,39 +1,79 @@
 ﻿using Engine.Events;
 using Engine.Interfaces;
+using Engine.Exceptions;
 
 namespace Engine {
-    public record Act {
+    public partial record Act {
         public Act(params EngineEvent[] onUseEvents) {
             OnUse = new(onUseEvents);
         }
 
-        public required string Text { get; set; }
+        public string Text { get; set; } = "";
+        public int UsesLeft { get; set; } = int.MaxValue;
         public bool IsActive { get; set; } = true;
+        public bool IsForDestruction { get; set; }
 
         public EngineEventHandler OnUse { get; } = new();
+        public EngineEventHandler OnUsesSpent { get; } = new();
 
         public virtual void Use() {
             OnUse.Invoke();
+            if (--UsesLeft <= 0)
+                OnUsesSpent.Invoke();
         }
     }
 
-    public record Act<T> : Act where T : IRegistrable<T> {
-        public Act(params EngineEvent[] onUseEvents) : base(onUseEvents) { }
-
-        public Act(T next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+    public record Passage : Act {
+        public Passage(Location next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
             Next = next;
+            if (Text.Length == 0)
+                Text = $"To {Next.Name}";
         }
 
-        public Act(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
-            // Next is set on first use so that T object can be created before
-            OnUse.Add(() => Next = T.GetInstance(next));
+        // Next is set on Next registration so that Location can be created after Act
+#pragma warning disable CS8618
+        public Passage(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+#pragma warning restore CS8618
+            // will Location.GetInstance work or should it be Derived.GetInstance
+            IRegistrable<Location>.OnRegistration.Add(new EngineEvent() {
+                FireCondition = IRegistrable<Location>.FireConditions.OnRegistered(next),
+                Action = EngineEvent.Actions.Chain(
+                    () => Next = Location.GetInstance(next),
+                    () => {
+                        if (Text.Length == 0)
+                            Text = $"To {Next!.Name}";
+                    }
+                )
+            });
+            // if Next hasn't been registered
+            OnUse.Add(new EngineEvent() {
+                FireCondition = () => Next == null,
+                Action = () => throw new ValueIsNullException(nameof(Next))
+            });
         }
 
-        public required T Next { get; set; }
+        public Location Next { get; set; }
 
         public override void Use() {
             base.Use();
-            T.Current.Value = Next;
+            // same as in constructor
+            Location.Current.Value = Next;
         }
+    }
+
+    public record SceneStarter : Act {
+        public SceneStarter(Scene scene, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+            Scene = scene;
+        }
+
+        // Next is set on first use so that Location can be created after Act
+#pragma warning disable CS8618
+        public SceneStarter(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+#pragma warning restore CS8618
+            // will Location.GetInstance work or should it be Derived.GetInstance
+            OnUse.Add(() => Scene = Scene.GetInstance(next));
+        }
+
+        public Scene Scene { get; set; }
     }
 }

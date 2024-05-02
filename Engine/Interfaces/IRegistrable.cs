@@ -1,18 +1,13 @@
 ﻿using Engine.Events;
+using Engine.Exceptions;
 
 using Serilog;
 
-using System.Collections.Generic;
-
 namespace Engine.Interfaces {
-    public class NotRegisteredException : Exception {
-        public NotRegisteredException() { }
-        public NotRegisteredException(string? message) : base(message) { }
-        public NotRegisteredException(string? message, Exception? innerException) : base(message, innerException) { }
-    }
-
-    public interface IRegistrable<T> where T : IRegistrable<T> {
+    public partial interface IRegistrable<T> {
         protected static Dictionary<string, T> Instances { get; set; } = [];
+
+        public static EngineEventHandler OnRegistration { get; } = new();
 
 #pragma warning disable IDE1006
         protected static List<T> allInstances => [.. Instances.Values];
@@ -34,14 +29,10 @@ namespace Engine.Interfaces {
         }
 #pragma warning restore IDE1006
 
-        public abstract static Observable<T> Current { get; }
-
         public abstract static List<T> AllInstances { get; }
 
         public abstract static T GetInstance(string id);
 
         public abstract bool Register(string id);
-
-        public abstract EngineEventHandler OnRegistration { get; }
     }
 }

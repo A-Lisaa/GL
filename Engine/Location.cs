@@ -5,34 +5,21 @@ using Serilog;
 
 namespace Engine {
     // merge Location and Scene
+    // Location is the boss of this gym and Scene is a fucking slave
     public record Location : IRegistrable<Location> {
-        private void AddPassagesToActs() {
-            Acts.InsertRange(0,
-                from passage in Passages
-                select new Act<Location>() {
-                    Text = $"To {passage.Name}",
-                    Next = passage
-                }
-            );
-        }
-
-        public Location() {
-            OnRegistration.Add(AddPassagesToActs);
-        }
-
-        public static Observable<Location> Current => new(
+        public static Observable<Location> Current { get; set; } = new(
             new Location() {
-                Name = "Technical Scene",
+                Name = "Technical Location",
                 Body = "Nothing to see here",
                 Acts = [
-                    new Act(new EngineEvent() { Action = () => Game.Actions.StopRunning() }) { Text = "Stop" }
+                    new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
                 ]
             }
         );
 
         public static List<Location> AllInstances => IRegistrable<Location>.allInstances;
 
-        public bool Register(string id) {
+        public virtual bool Register(string id) {
             return ((IRegistrable<Location>)this).register(id);
         }
 
@@ -40,17 +27,15 @@ namespace Engine {
             return IRegistrable<Location>.getInstance(id);
         }
 
-        public required string Name { get; set; }
-        public required string Body { get; set; }
+        public string Name { get; set; } = "";
+        public string Body { get; set; } = "";
         public List<Act> Acts { get; init; } = [];
-        public List<Location> Passages { get; init; } = [];
 
         public EngineEventHandler OnEnter { get; } = new();
         public EngineEventHandler OnExit { get; } = new();
-        public EngineEventHandler OnRegistration { get; } = new();
 
         public static void Move(Location destination) {
-            Current.Value = destination;
+            Location.Current.Value = destination;
         }
 
         public void UseAct(int actNumber) {
@@ -65,6 +50,7 @@ namespace Engine {
             }
             Log.Debug($"Using act {actNumber}");
             act.Use();
+            Acts.RemoveAll(act => act.IsForDestruction);
         }
     }
 }

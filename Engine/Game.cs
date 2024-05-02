@@ -8,6 +8,7 @@ namespace Engine {
         public static HashSet<string> Flags { get; } = [];
         public static Dictionary<string, int> Counters { get; } = [];
         public static EngineEventHandler Events { get; } = new();
+        public static EngineDateTime DateTime { get; } = new(System.DateTime.Now);
 
         public virtual void Run() {
             UI.Run();

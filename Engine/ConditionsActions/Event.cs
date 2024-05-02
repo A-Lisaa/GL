@@ -29,6 +29,10 @@
             public static Func<bool> Always() {
                 return () => true;
             }
+
+            public static Func<bool> Chance(double chance) {
+                return () => Utility.Random.NextDouble() < chance;
+            }
         }
 
         public static class Actions {

@@ -1,18 +1,18 @@
 ﻿namespace Engine.Events {
-    public partial record EngineEvent : IComparable<EngineEvent> {
+    public partial record EngineEvent : IComparable<EngineEvent>  {
         public required Action Action { private get; init; }
 
         /// <summary>
         /// returns <c>true</c> when the event is to be invoked
         /// </summary>
-        public Func<bool> FireCondition { private get; init; } = FireConditions.Always();
+        public Func<bool> FireCondition { private get; init; } = EngineEvent.FireConditions.Always();
 
         // default set to OneTime seems like a good idea to avoid stupids setting it to Never
         // maybe should discourage and warn about using Never and similar conditions
         /// <summary>
         /// returns <c>true</c> when the event is to be destructed
         /// </summary>
-        public Func<bool> DestructionCondition { private get; init; } = DestructionConditions.OneTime();
+        public Func<bool> DestructionCondition { private get; init; } = EngineEvent.DestructionConditions.OneTime();
 
         // do we need this or should we use DestructionCondition directly?
         // probably not as IsForDestruction could be set by smth else
@@ -49,10 +49,14 @@
             }
         }
 
+        public static EngineEvent FromAction(Action action) {
+            return new EngineEvent() { Action = action };
+        }
+
         public static IEnumerable<EngineEvent> FromActions(IEnumerable<Action> actions) {
             return
                 from action in actions
-                select new EngineEvent() { Action = action };
+                select FromAction(action);
         }
     }
 }

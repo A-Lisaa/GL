@@ -7,7 +7,7 @@ namespace Engine {
     public partial record Scene : IRegistrable<Scene> {
         public static Scene Chain(params Scene[] scenes) {
             for (int i = 0; i < scenes.Length - 1; i++) {
-                scenes[i].Acts.Insert(0, new Act<Scene>() { Text = "Continue", Next = scenes[i+1] });
+                scenes[i].Acts.Insert(0, new SceneStarter(scenes[i + 1]) { Text = "Continue" });
             }
             return scenes[0];
         }

@@ -5,12 +5,16 @@ namespace Engine.UI {
 #pragma warning disable S101
     public class CLI : UI {
 #pragma warning restore S101
-        private static void PrintScene(Scene scene) {
-            Console.WriteLine($"Name = {scene.Name}");
-            Console.WriteLine($"Body = {scene.Body}");
+        private static void PrintLocation(Location location) {
+            Console.WriteLine($"Name = {location.Name}");
+            Console.WriteLine($"Body = {location.Body}");
             Console.WriteLine("Acts: ");
-            foreach (var (i, act) in scene.Acts.Enumerate()) {
-                Console.WriteLine($"{i}) {act.Text}");
+            foreach (var (i, act) in location.Acts.Enumerate()) {
+                Console.Write($"{i}) {act.Text}");
+                if (!act.IsActive) {
+                    Console.Write(" (disabled)");
+                }
+                Console.WriteLine();
             }
         }
 
@@ -36,14 +40,14 @@ namespace Engine.UI {
         public override void Run() {
             while (Game.IsRunning) {
                 Console.WriteLine("--------------------------------------------------------------------------------------");
-                PrintScene(Scene.Current.Value);
+                PrintLocation(Location.Current.Value);
                 Console.WriteLine("--------------------------------------------------------------------------------------");
                 Console.Write("Enter the act number: ");
                 int act = GetAct();
                 if (act == -1)
                     continue;
-                Scene.Current.Value.UseAct(act);
-                Scene.Current.Value.OnStart.Invoke();
+                Location.Current.Value.UseAct(act);
+                Location.Current.Value.OnEnter.Invoke();
                 // should the global events be called in there? we'll have to change things like this in every UI child
                 Game.Events.Invoke();
             }
