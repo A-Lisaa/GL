@@ -1,21 +1,21 @@
 ﻿namespace Engine.Events {
-    public partial record EngineEvent {
+    public record EngineEvent {
         public class CommonConditions {
-            public static Func<bool> All(params Func<bool>[] conditions) {
-                return () => Array.TrueForAll(conditions, (condition) => condition.Invoke());
+            public static Func<TEventArgs, bool> All<TEventArgs>(params Func<TEventArgs, bool>[] conditions) where TEventArgs : EventArgs {
+                return (TEventArgs eventArgs) => Array.TrueForAll(conditions, (condition) => condition.Invoke(eventArgs));
             }
 
-            public static Func<bool> Any(params Func<bool>[] conditions) {
-                return () => Array.Exists(conditions, (condition) => condition.Invoke());
+            public static Func<TEventArgs, bool> Any<TEventArgs>(params Func<TEventArgs, bool>[] conditions) where TEventArgs : EventArgs {
+                return (TEventArgs eventArgs) => Array.Exists(conditions, (condition) => condition.Invoke(eventArgs));
             }
 
             // should it be common or separate?
             private readonly static Dictionary<int, int> NTimesCounters = [];
             private static int lastNTimesIndex;
-            public static Func<bool> NTimes(int times) {
+            public static Func<EventArgs, bool> NTimes(int times) {
                 int index = lastNTimesIndex++;
                 NTimesCounters.Add(index, 0);
-                return () => {
+                return (EventArgs _) => {
                     if (++NTimesCounters[index] == times) {
                         NTimesCounters.Remove(index);
                         return true;

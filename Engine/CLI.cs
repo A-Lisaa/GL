@@ -40,14 +40,14 @@ namespace Engine.UI {
         public override void Run() {
             while (Game.IsRunning) {
                 Console.WriteLine("--------------------------------------------------------------------------------------");
-                PrintLocation(Location.Current.Value);
+                PrintLocation(Location.Current);
                 Console.WriteLine("--------------------------------------------------------------------------------------");
                 Console.Write("Enter the act number: ");
                 int act = GetAct();
                 if (act == -1)
                     continue;
-                Location.Current.Value.UseAct(act);
-                Location.Current.Value.OnEnter.Invoke();
+                Location.Current.UseAct(act);
+                Location.Current.OnEnter.Invoke();
                 // should the global events be called in there? we'll have to change things like this in every UI child
                 Game.Events.Invoke();
             }

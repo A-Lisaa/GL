@@ -1,5 +1,4 @@
 ﻿using Engine.Events;
-using Engine.Interfaces;
 using Engine.Exceptions;
 
 namespace Engine {
@@ -30,15 +29,14 @@ namespace Engine {
                 Text = $"To {Next.Name}";
         }
 
-        // Next is set on Next registration so that Location can be created after Act
+        // Next is set on Next registration so that Location can be created after Passage
 #pragma warning disable CS8618
         public Passage(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
 #pragma warning restore CS8618
-            // will Location.GetInstance work or should it be Derived.GetInstance
-            IRegistrable<Location>.OnRegistration.Add(new EngineEvent() {
-                FireCondition = IRegistrable<Location>.FireConditions.OnRegistered(next),
+            Location.Registration.OnRegistration.Add(new EngineEvent() {
+                FireCondition = () => Location.Registration.IsRegistered(next),
                 Action = EngineEvent.Actions.Chain(
-                    () => Next = Location.GetInstance(next),
+                    () => Next = Location.Registration.GetInstance(next),
                     () => {
                         if (Text.Length == 0)
                             Text = $"To {Next!.Name}";
@@ -56,8 +54,7 @@ namespace Engine {
 
         public override void Use() {
             base.Use();
-            // same as in constructor
-            Location.Current.Value = Next;
+            Location.Current = Next;
         }
     }
 
@@ -71,7 +68,7 @@ namespace Engine {
         public SceneStarter(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
 #pragma warning restore CS8618
             // will Location.GetInstance work or should it be Derived.GetInstance
-            OnUse.Add(() => Scene = Scene.GetInstance(next));
+            OnUse.Add(() => Scene = Scene.Registration.GetInstance(next));
         }
 
         public Scene Scene { get; set; }

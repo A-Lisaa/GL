@@ -29,19 +29,29 @@ namespace GirlLife {
                     }
                 ]
             };
-            myRoom.Register("myRoom");
+            Location.Registration.Register(myRoom, "myRoom");
 
-            new Location() {
+            Location.Registration.Register(new Location() {
                 Name = "Hallway",
                 Body = "Hallway is fine",
                 Acts = [
+                    new Passage("street"),
                     new Act(
                         EngineEvent.FromAction(Game.Actions.StopRunning())
                     ) {
                         Text = "Exit"
                     }
                 ]
-            }.Register("hallway");
+            }, "hallway");
+
+            Location.Registration.Register(new Location() {
+                Name = "Street",
+                Body = "Lenin Street",
+                Acts = [
+                    new Passage("hallway")
+                ],
+                IsOutdoor = true
+            }, "street");
         }
     }
 }

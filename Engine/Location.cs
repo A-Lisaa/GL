@@ -1,31 +1,30 @@
 ﻿using Engine.Events;
-using Engine.Interfaces;
 
 using Serilog;
 
 namespace Engine {
-    // merge Location and Scene
-    // Location is the boss of this gym and Scene is a fucking slave
-    public record Location : IRegistrable<Location> {
-        public static Observable<Location> Current { get; set; } = new(
-            new Location() {
-                Name = "Technical Location",
-                Body = "Nothing to see here",
-                Acts = [
-                    new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
-                ]
+    public record Location {
+        protected internal static Registration<Location> Registration { get; } = new();
+
+        protected static object CurrentInner { get; set; } = new Location() {
+            Name = "Technical Location",
+            Body = "Nothing to see here",
+            Acts = [
+                new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
+            ]
+        };
+
+        protected internal static Location Current {
+            get {
+                return (Location)CurrentInner;
             }
-        );
-
-        public static List<Location> AllInstances => IRegistrable<Location>.allInstances;
-
-        public virtual bool Register(string id) {
-            return ((IRegistrable<Location>)this).register(id);
+            set {
+                CurrentInner = value;
+                OnChange.Invoke();
+            }
         }
 
-        public static Location GetInstance(string id) {
-            return IRegistrable<Location>.getInstance(id);
-        }
+        public static EngineEventHandler OnChange { get; } = new();
 
         public string Name { get; set; } = "";
         public string Body { get; set; } = "";
@@ -33,10 +32,6 @@ namespace Engine {
 
         public EngineEventHandler OnEnter { get; } = new();
         public EngineEventHandler OnExit { get; } = new();
-
-        public static void Move(Location destination) {
-            Location.Current.Value = destination;
-        }
 
         public void UseAct(int actNumber) {
             if (actNumber < 0 || actNumber >= Acts.Count) {

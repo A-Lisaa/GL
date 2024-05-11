@@ -1,10 +1,9 @@
 ﻿using Engine.Events;
-using Engine.Interfaces;
 
 using Serilog;
 
 namespace Engine {
-    public partial record Scene : IRegistrable<Scene> {
+    public partial record Scene {
         public static Scene Chain(params Scene[] scenes) {
             for (int i = 0; i < scenes.Length - 1; i++) {
                 scenes[i].Acts.Insert(0, new SceneStarter(scenes[i + 1]) { Text = "Continue" });
@@ -12,34 +11,13 @@ namespace Engine {
             return scenes[0];
         }
 
-        public static Dictionary<string, Scene> Instances { get; set; } = [];
-
-        public static Observable<Scene> Current => new(
-            new Scene() {
-                Name = "Technical Scene",
-                Body = "Nothing to see here",
-                Acts = [
-                    new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
-                ]
-            }
-        );
-
-        public static List<Scene> AllInstances => IRegistrable<Scene>.allInstances;
-
-        public bool Register(string id) {
-            return ((IRegistrable<Scene>)this).register(id);
-        }
-
-        public static Scene GetInstance(string id) {
-            return IRegistrable<Scene>.getInstance(id);
-        }
+        protected internal static Registration<Scene> Registration { get; } = new();
 
         public required string Body { get; set; }
         public string Name { get; set; } = "";
         public List<Act> Acts { get; init; } = [];
 
         public EngineEventHandler OnStart { get; } = new();
-        public EngineEventHandler OnRegistration { get; } = new();
 
         public void UseAct(int actNumber) {
             if (actNumber < 0 || actNumber >= Acts.Count) {

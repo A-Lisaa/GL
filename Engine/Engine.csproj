@@ -22,4 +22,8 @@
     <None Include="D:\Projects\cs\GirlLife\Engine\ConditionsActions\.editorconfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+
 </Project>
