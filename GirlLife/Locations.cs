@@ -1,57 +1,62 @@
 ﻿using Engine;
 using Engine.Events;
-using Engine.UI;
 
 namespace GirlLife {
+    public record MyRoom : Location {
+        public override string Name { get; set; } = "My Room";
+        public override string Body { get; set; } = "Just my room";
+        public override List<Act> Acts { get; } = [
+            new Passage("Hallway")
+        ];
+
+        public bool HasParrot { get; set; }
+    }
+
+    public record Hallway : Location {
+        public override string Name { get; set; } = "Hallway";
+        public override string Body { get; set; } = "Hallway of my apartment";
+        public override List<Act> Acts { get; } = [
+            new Passage("MyRoom"),
+            new Passage("Street")
+        ];
+    }
+
+    public record Street : Location {
+        public override string Name { get; set; } = "Lenin Street";
+        public override string Body { get; set; } = "The main street of the town";
+        public override List<Act> Acts { get; } = [
+            new Passage("Hallway"),
+            new Passage("Mall")
+        ];
+
+        public override bool IsOutdoor { get; set; } = true;
+    }
+
+    public record Mall : Location {
+        public override string Name { get; set; } = "Mall";
+        public override string Body { get; set; } = "City mall";
+        public override List<Act> Acts { get; } = [
+            new Passage("Street"),
+            new Passage("ZooShop")
+        ];
+    }
+
+    public record ZooShop : Location {
+        public override string Name { get; set; } = "Zoo Shop";
+        public override string Body { get; set; } = "Animals are sold here";
+        public override List<Act> Acts { get; } = [
+            new Passage("Mall"),
+            new Act(EngineEvent.FromAction((object? _, EventArgs _) => Location.Registration.GetInstance<MyRoom>().HasParrot = true )) { Text = "Buy a parrot" }
+        ];
+    }
+
     public static class Locations {
-        public static void CreateLocations() {
-            var sceneAStarter = new SceneStarter("SceneA") {
-                Text = "Scene A",
-                UsesLeft = 1,
-            };
-            sceneAStarter.OnUsesSpent.Add(Act.Actions.SetForDestruction(sceneAStarter));
-            var myRoom = new Location() {
-                Name = "My Room",
-                Body = "Just my room",
-                Acts = [
-                    new Passage("hallway"),
-                    new Act(
-                        new EngineEvent() {
-                            Action = UI.Actions.Notify($"Current time is: {Game.DateTime}"),
-                            DestructionCondition = EngineEvent.DestructionConditions.Never()
-                        }
-                    ) {
-                        Text = "Look at the watch"
-                    },
-                    sceneAStarter,
-                    new SceneStarter("SceneB") {
-                        Text = "Scene B"
-                    }
-                ]
-            };
-            Location.Registration.Register(myRoom, "myRoom");
-
-            Location.Registration.Register(new Location() {
-                Name = "Hallway",
-                Body = "Hallway is fine",
-                Acts = [
-                    new Passage("street"),
-                    new Act(
-                        EngineEvent.FromAction(Game.Actions.StopRunning())
-                    ) {
-                        Text = "Exit"
-                    }
-                ]
-            }, "hallway");
-
-            Location.Registration.Register(new Location() {
-                Name = "Street",
-                Body = "Lenin Street",
-                Acts = [
-                    new Passage("hallway")
-                ],
-                IsOutdoor = true
-            }, "street");
+        public static void RegisterLocations() {
+            Location.Registration.Register<MyRoom>();
+            Location.Registration.Register<Hallway>();
+            Location.Registration.Register<Street>();
+            Location.Registration.Register<Mall>();
+            Location.Registration.Register<ZooShop>();
         }
     }
 }

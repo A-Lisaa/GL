@@ -1,38 +1,61 @@
-﻿using System.Collections.ObjectModel;
+﻿namespace Engine.Events {
+    public class EngineEventHandler<TEventArgs> where TEventArgs : EventArgs {
+        public EngineEventHandler() { }
 
-namespace Engine.Events {
-    // make an excel table of different events with descriptions and tags for finding appropriate one
-    public partial class EngineEventHandler {
-        public EngineEventHandler(params EngineEvent[] engineEvents) {
-            events = [.. engineEvents];
-            // sorting each time something is changed seems pointless, maybe ObservableList?
-            events.Sort();
+        public EngineEventHandler(EngineEvent<TEventArgs>[] events) : this() {
+            _events = [..events];
         }
 
-        private readonly List<EngineEvent> events;
-
-        public event Action? Invoked;
-
-        public void Add(EngineEvent engineEvent) {
-            events.Add(engineEvent);
-            events.Sort();
+        public EngineEventHandler(EngineEventHandler<TEventArgs> handler) : this() {
+            _events = handler._events;
         }
 
-        public void Add(Action action) {
-            Add(new EngineEvent() { Action = action });
+        private readonly List<EngineEvent<TEventArgs>> _events = [];
+
+        public class EventAddedEventArgs : EventArgs {
+            public required EngineEvent<TEventArgs> EngineEvent { get; init; }
         }
 
-        public void AddRange(IEnumerable<EngineEvent> engineEvents) {
-            events.AddRange(engineEvents);
-            events.Sort();
+        public class InvokedEventArgs : EventArgs {
+            public required List<EngineEvent<TEventArgs>> RemovedEvents { get; init; }
         }
 
-        public void Invoke() {
-            foreach (var engineEvent in events) {
-                engineEvent.Invoke();
+        public event EventHandler<EventAddedEventArgs>? OnEventAdded;
+        public event EventHandler<InvokedEventArgs>? OnInvoked;
+
+        public void AddEvent(EngineEvent<TEventArgs> engineEvent) {
+            _events.Add(engineEvent);
+            OnEventAdded?.Invoke(this, new() { EngineEvent = engineEvent });
+        }
+
+        public void AddAction(Action<object?, TEventArgs> action) {
+            AddEvent(new EngineEvent<TEventArgs>() { Action = action });
+        }
+
+        public void AddRange(IEnumerable<EngineEvent<TEventArgs>> engineEvents) {
+            foreach (var elem in engineEvents)
+                AddEvent(elem);
+        }
+
+        public void Invoke(object? sender, TEventArgs eventArgs) {
+            _events.Sort();
+            foreach (var engineEvent in _events) {
+                engineEvent.Invoke(sender, eventArgs);
             }
-            events.RemoveAll((engineEvent) => engineEvent.IsForDestruction);
-            Invoked?.Invoke();
+            // can't use RemoveAll as removed events are needed for InvokedEventArgs
+            List<EngineEvent<TEventArgs>> newEvents = [];
+            List<EngineEvent<TEventArgs>> removedEvents = [];
+            foreach (var engineEvent in _events) {
+                if (engineEvent.IsForDestruction)
+                    removedEvents.Add(engineEvent);
+                else
+                    newEvents.Add(engineEvent);
+            }
+            _events.Clear();
+            _events.AddRange(newEvents);
+            OnInvoked?.Invoke(this, new() { RemovedEvents = removedEvents });
         }
     }
+
+    public class EngineEventHandler(params EngineEvent<EventArgs>[] engineEvents) : EngineEventHandler<EventArgs>(engineEvents);
 }

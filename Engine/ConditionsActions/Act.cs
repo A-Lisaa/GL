@@ -1,16 +1,16 @@
 ﻿namespace Engine {
     public partial record Act {
         public class Actions {
-            public static Action<EventArgs> SetActive(Act act) {
-                return (EventArgs _) => act.IsActive = true;
+            public static DefaultActionReturn SetActive(Act act) {
+                return (object? _, EventArgs _) => act.IsActive = true;
             }
 
-            public static Action<EventArgs> SetInactive(Act act) {
-                return (EventArgs _) => act.IsActive = false;
+            public static DefaultActionReturn SetInactive(Act act) {
+                return (object? _, EventArgs _) => act.IsActive = false;
             }
 
-            public static Action<EventArgs> SetForDestruction(Act act) {
-                return (EventArgs _) => act.IsForDestruction = true;
+            public static DefaultActionReturn SetForDestruction(Act act) {
+                return (object? _, EventArgs _) => act.IsForDestruction = true;
             }
         }
     }

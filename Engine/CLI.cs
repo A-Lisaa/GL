@@ -47,9 +47,8 @@ namespace Engine.UI {
                 if (act == -1)
                     continue;
                 Location.Current.UseAct(act);
-                Location.Current.OnEnter.Invoke();
                 // should the global events be called in there? we'll have to change things like this in every UI child
-                Game.Events.Invoke();
+                Game.Events.Invoke(this, new());
             }
         }
     }

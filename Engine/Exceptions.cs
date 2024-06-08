@@ -11,11 +11,11 @@
         public InvalidValueException(string? message, Exception? innerException) : base(message, innerException) { }
     }
 
-    public class ValueIsNullException : InvalidValueException {
-        public ValueIsNullException() { }
-        public ValueIsNullException(string? message) : base(message) { }
-        public ValueIsNullException(string? message, Exception? innerException) : base(message, innerException) { }
-        public ValueIsNullException(string? paramName, string? message) : this(message ?? $"{paramName} is null") { }
-        public ValueIsNullException(string? paramName, string? message, Exception? innerException) : base(message ?? $"{paramName} is null", innerException) { }
+    public class ValueNullException : InvalidValueException {
+        public ValueNullException() { }
+        public ValueNullException(string? message) : base(message) { }
+        public ValueNullException(string? message, Exception? innerException) : base(message, innerException) { }
+        public ValueNullException(string? paramName, string? message) : this(message ?? $"{paramName} is null") { }
+        public ValueNullException(string? paramName, string? message, Exception? innerException) : base(message ?? $"{paramName} is null", innerException) { }
     }
 }

@@ -1,18 +1,21 @@
-﻿namespace Engine.Events {
-    public partial record EngineEvent : IComparable<EngineEvent>  {
-        public required Action Action { private get; init; }
+﻿global using DefaultConditionReturn = System.Func<object?, System.EventArgs, bool>;
+global using DefaultActionReturn = System.Action<object?, System.EventArgs>;
+
+namespace Engine.Events {
+    public record EngineEvent<TEventArgs> : IComparable<EngineEvent<TEventArgs>> where TEventArgs : EventArgs  {
+        public required Action<object?, TEventArgs> Action { private get; init; }
 
         /// <summary>
         /// returns <c>true</c> when the event is to be invoked
         /// </summary>
-        public Func<bool> FireCondition { private get; init; } = EngineEvent.FireConditions.Always();
+        public Func<object?, TEventArgs, bool> FireCondition { private get; init; } = EngineEvent.FireConditions.Always();
 
         // default set to OneTime seems like a good idea to avoid stupids setting it to Never
         // maybe should discourage and warn about using Never and similar conditions
         /// <summary>
         /// returns <c>true</c> when the event is to be destructed
         /// </summary>
-        public Func<bool> DestructionCondition { private get; init; } = EngineEvent.DestructionConditions.OneTime();
+        public Func<object?, TEventArgs, bool> DestructionCondition { private get; init; } = EngineEvent.DestructionConditions.OneTime();
 
         // do we need this or should we use DestructionCondition directly?
         // probably not as IsForDestruction could be set by smth else
@@ -34,29 +37,31 @@
         /// </summary>
         public int TimesToInvokeAction { private get; init; } = 1;
 
-        public int CompareTo(EngineEvent? other) {
+        public int CompareTo(EngineEvent<TEventArgs>? other) {
             if (other == null)
                 return 1;
             return Priority.CompareTo(other.Priority);
         }
 
-        public virtual void Invoke() {
-            if (FireCondition.Invoke()) {
+        public virtual void Invoke(object? sender, TEventArgs eventArgs) {
+            if (FireCondition.Invoke(sender, eventArgs)) {
                 for (int _ = 0; _ < TimesToInvokeAction; _++) {
-                    Action.Invoke();
+                    Action.Invoke(sender, eventArgs);
                 }
-                IsForDestruction = DestructionCondition.Invoke();
+                IsForDestruction = DestructionCondition.Invoke(sender, eventArgs);
             }
         }
 
-        public static EngineEvent FromAction(Action action) {
-            return new EngineEvent() { Action = action };
+        public static EngineEvent<TEventArgs> FromAction(Action<object?, TEventArgs> action) {
+            return new() { Action = action };
         }
 
-        public static IEnumerable<EngineEvent> FromActions(IEnumerable<Action> actions) {
+        public static IEnumerable<EngineEvent<TEventArgs>> FromActions(IEnumerable<Action<object?, TEventArgs>> actions) {
             return
                 from action in actions
                 select FromAction(action);
         }
     }
+
+    public partial record EngineEvent : EngineEvent<EventArgs>;
 }

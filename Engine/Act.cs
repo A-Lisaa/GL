@@ -3,7 +3,7 @@ using Engine.Exceptions;
 
 namespace Engine {
     public partial record Act {
-        public Act(params EngineEvent[] onUseEvents) {
+        public Act(params EngineEvent<EventArgs>[] onUseEvents) {
             OnUse = new(onUseEvents);
         }
 
@@ -13,40 +13,65 @@ namespace Engine {
         public bool IsForDestruction { get; set; }
 
         public EngineEventHandler OnUse { get; } = new();
+        public EngineEventHandler OnBeforeShown { get; } = new();
         public EngineEventHandler OnUsesSpent { get; } = new();
 
         public virtual void Use() {
-            OnUse.Invoke();
+            OnUse.Invoke(this, new());
             if (--UsesLeft <= 0)
-                OnUsesSpent.Invoke();
+                OnUsesSpent.Invoke(this, new());
         }
     }
 
+    public record SceneStarter : Act {
+        public SceneStarter(Scene scene, params EngineEvent<EventArgs>[] onUseEvents) : base(onUseEvents) {
+            Scene = scene;
+        }
+
+        // Next is set on Next registration so that Scene can be created after SceneStarter
+#pragma warning disable CS8618
+        public SceneStarter(string next, params EngineEvent<EventArgs>[] onUseEvents) : base(onUseEvents) {
+#pragma warning restore CS8618
+            Scene.Registration.OnRegistration.AddEvent(new() {
+                FireCondition = (object? _, Registration<Scene>.OnRegistrationEventArgs args) => args.Id == next,
+                Action = (object? _, Registration<Scene>.OnRegistrationEventArgs args) => Scene = args.Instance
+            });
+        }
+
+        public Scene Scene { get; set; }
+    }
+
     public record Passage : Act {
-        public Passage(Location next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+        public Passage(Location next, params EngineEvent<EventArgs>[] onUseEvents) : base(onUseEvents) {
             Next = next;
             if (Text.Length == 0)
                 Text = $"To {Next.Name}";
         }
 
-        // Next is set on Next registration so that Location can be created after Passage
+        //Next is set on Next registration so that Location can be created after Passage
 #pragma warning disable CS8618
-        public Passage(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
+        public Passage(string next, params EngineEvent<EventArgs>[] onUseEvents) : base(onUseEvents) {
 #pragma warning restore CS8618
-            Location.Registration.OnRegistration.Add(new EngineEvent() {
-                FireCondition = () => Location.Registration.IsRegistered(next),
-                Action = EngineEvent.Actions.Chain(
-                    () => Next = Location.Registration.GetInstance(next),
-                    () => {
+            if (Location.Registration.IsRegistered(next)) {
+                Next = Location.Registration[next];
+                if (Text.Length == 0)
+                    Text = $"To {Next.Name}";
+            }
+            else {
+                Location.Registration.OnRegistration.AddEvent(new() {
+                    FireCondition = (object? _, Registration<Location>.OnRegistrationEventArgs args) => args.Id == next,
+                    Action = (object? _, Registration<Location>.OnRegistrationEventArgs args) => {
+                        Next = args.Instance;
                         if (Text.Length == 0)
-                            Text = $"To {Next!.Name}";
+                            Text = $"To {Next.Name}";
                     }
-                )
-            });
+                });
+            }
+
             // if Next hasn't been registered
-            OnUse.Add(new EngineEvent() {
-                FireCondition = () => Next == null,
-                Action = () => throw new ValueIsNullException(nameof(Next))
+            OnBeforeShown.AddEvent(new() {
+                FireCondition = (object? _, EventArgs _) => Next == null,
+                Action = (object? _, EventArgs _) => throw new ValueNullException(nameof(Next))
             });
         }
 
@@ -54,23 +79,7 @@ namespace Engine {
 
         public override void Use() {
             base.Use();
-            Location.Current = Next;
+            Location.Move(Next);
         }
-    }
-
-    public record SceneStarter : Act {
-        public SceneStarter(Scene scene, params EngineEvent[] onUseEvents) : base(onUseEvents) {
-            Scene = scene;
-        }
-
-        // Next is set on first use so that Location can be created after Act
-#pragma warning disable CS8618
-        public SceneStarter(string next, params EngineEvent[] onUseEvents) : base(onUseEvents) {
-#pragma warning restore CS8618
-            // will Location.GetInstance work or should it be Derived.GetInstance
-            OnUse.Add(() => Scene = Scene.Registration.GetInstance(next));
-        }
-
-        public Scene Scene { get; set; }
     }
 }

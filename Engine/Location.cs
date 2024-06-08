@@ -3,35 +3,66 @@
 using Serilog;
 
 namespace Engine {
-    public record Location {
-        protected internal static Registration<Location> Registration { get; } = new();
+    public abstract record Location {
+        protected Location() {
+            OnBeforeShown.AddEvent(new EngineEvent() {
+                Action = (object? _, EventArgs _) => Acts.ForEach((Act act) => act.OnBeforeShown.Invoke(this, new())),
+                DestructionCondition = EngineEvent.DestructionConditions.Never()
+            });
+        }
 
-        protected static object CurrentInner { get; set; } = new Location() {
-            Name = "Technical Location",
-            Body = "Nothing to see here",
-            Acts = [
-                new Act(new EngineEvent() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
-            ]
-        };
+        public static Registration<Location> Registration { get; } = new();
 
-        protected internal static Location Current {
+        protected record TechnicalLocation : Location {
+            public override string Name { get; set; } = "Technical Location";
+            public override string Body { get; set; } = "Nothing to see here";
+
+            public override List<Act> Acts => [
+                new Act(new EngineEvent<EventArgs>() { Action = Game.Actions.StopRunning() }) { Text = "Stop" }
+            ];
+        }
+
+        protected static Location CurrentInner { get; set; } = new TechnicalLocation();
+
+        public static Location Current {
             get {
-                return (Location)CurrentInner;
+                return CurrentInner;
             }
             set {
+                OnChangeEventArgs args = new() { OldLocation = Current, NewLocation = value };
                 CurrentInner = value;
-                OnChange.Invoke();
+                OnChange.Invoke(null, args);
             }
         }
 
-        public static EngineEventHandler OnChange { get; } = new();
+        public class OnChangeEventArgs : EventArgs {
+            public required Location OldLocation { get; set; }
+            public required Location NewLocation { get; set; }
+        }
 
-        public string Name { get; set; } = "";
-        public string Body { get; set; } = "";
-        public List<Act> Acts { get; init; } = [];
+        public static EngineEventHandler<OnChangeEventArgs> OnChange { get; } = new();
 
-        public EngineEventHandler OnEnter { get; } = new();
-        public EngineEventHandler OnExit { get; } = new();
+        public abstract string Name { get; set; }
+        public abstract string Body { get; set; }
+        public abstract List<Act> Acts { get; }
+
+        public class OnEnterEventArgs : EventArgs {
+            public required Location EnteredLocation { get; set; }
+        }
+
+        public class OnExitEventArgs : EventArgs {
+            public required Location ExitedLocation { get; set; }
+        }
+
+        public EngineEventHandler OnBeforeShown { get; } = new();
+        public EngineEventHandler<OnEnterEventArgs> OnEnter { get; } = new();
+        public EngineEventHandler<OnExitEventArgs> OnExit { get; } = new();
+
+        public static void Move(Location next) {
+            Current.OnExit.Invoke(null, new() { ExitedLocation = Current });
+            Current = next;
+            Current.OnEnter.Invoke(null, new() { EnteredLocation = Current });
+        }
 
         public void UseAct(int actNumber) {
             if (actNumber < 0 || actNumber >= Acts.Count) {

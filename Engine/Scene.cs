@@ -3,7 +3,7 @@
 using Serilog;
 
 namespace Engine {
-    public partial record Scene {
+    public abstract partial record Scene {
         public static Scene Chain(params Scene[] scenes) {
             for (int i = 0; i < scenes.Length - 1; i++) {
                 scenes[i].Acts.Insert(0, new SceneStarter(scenes[i + 1]) { Text = "Continue" });
@@ -11,7 +11,7 @@ namespace Engine {
             return scenes[0];
         }
 
-        protected internal static Registration<Scene> Registration { get; } = new();
+        public static Registration<Scene> Registration { get; } = new();
 
         public required string Body { get; set; }
         public string Name { get; set; } = "";
