@@ -33,12 +33,17 @@ namespace Engine {
         public SceneStarter(string next, params EngineEvent<EventArgs>[] onUseEvents) : base(onUseEvents) {
 #pragma warning restore CS8618
             Scene.Registration.OnRegistration.AddEvent(new() {
-                FireCondition = (object? _, Registration<Scene>.OnRegistrationEventArgs args) => args.Id == next,
+                FireCondition = Registration<Scene>.FireConditions.WhenRegistered(next),
                 Action = (object? _, Registration<Scene>.OnRegistrationEventArgs args) => Scene = args.Instance
             });
         }
 
         public Scene Scene { get; set; }
+
+        public override void Use() {
+            base.Use();
+            Game.UI.ShowScene(Scene);
+        }
     }
 
     public record Passage : Act {

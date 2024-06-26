@@ -18,6 +18,10 @@ namespace Engine.UI {
             }
         }
 
+        public override void ShowScene(Scene scene) {
+            Console.WriteLine(scene.Body);
+        }
+
         private static int GetAct() {
             string? input = Console.ReadLine();
             Console.WriteLine();

@@ -10,6 +10,10 @@ namespace Engine {
         public static EngineEventHandler Events { get; } = new();
         public static EngineDateTime DateTime { get; } = new(System.DateTime.Now);
 
+        public virtual void Update() {
+
+        }
+
         public virtual void Run() {
             UI.Run();
         }

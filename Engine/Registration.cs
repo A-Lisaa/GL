@@ -4,7 +4,7 @@ using Engine.Exceptions;
 using Serilog;
 
 namespace Engine {
-    public class Registration<T> {
+    public partial class Registration<T> {
         private readonly Dictionary<string, T> _instances = [];
 
         public class OnRegistrationEventArgs : EventArgs {
@@ -20,6 +20,10 @@ namespace Engine {
         public T this[string index] {
             get => GetInstance(index);
             set => Register(value, index, true);
+        }
+
+        public bool IsRegistered<TInstance>() where TInstance : T {
+            return IsRegistered(typeof(TInstance).Name);
         }
 
         public bool IsRegistered(string id) {

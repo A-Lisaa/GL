@@ -1,4 +1,4 @@
 ﻿namespace GirlLife {
-    public record Scene : Engine.Scene {
+    public abstract record Scene : Engine.Scene {
     }
 }

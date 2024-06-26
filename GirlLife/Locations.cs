@@ -3,13 +3,27 @@ using Engine.Events;
 
 namespace GirlLife {
     public record MyRoom : Location {
+        private bool hasParrot;
+
+        public record TalkWithSister : Scene {
+            public override string Body { get; set; } = "Talking with my sister";
+        }
+
         public override string Name { get; set; } = "My Room";
         public override string Body { get; set; } = "Just my room";
         public override List<Act> Acts { get; } = [
             new Passage("Hallway")
         ];
 
-        public bool HasParrot { get; set; }
+        public bool HasParrot {
+            get => hasParrot;
+            set {
+                hasParrot = value;
+                if (hasParrot) {
+                    Body += "\n\nYour parrot is sitting in his cage";
+                }
+            }
+        }
     }
 
     public record Hallway : Location {
@@ -46,7 +60,7 @@ namespace GirlLife {
         public override string Body { get; set; } = "Animals are sold here";
         public override List<Act> Acts { get; } = [
             new Passage("Mall"),
-            new Act(EngineEvent.FromAction((object? _, EventArgs _) => Location.Registration.GetInstance<MyRoom>().HasParrot = true )) { Text = "Buy a parrot" }
+            new Act(EngineEvent.FromAction((object? sender, EventArgs _) => { Location.Registration.GetInstance<MyRoom>().HasParrot = true; ((Act)sender).IsActive = false; } )) { Text = "Buy a parrot" }
         ];
     }
 

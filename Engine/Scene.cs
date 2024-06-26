@@ -13,9 +13,8 @@ namespace Engine {
 
         public static Registration<Scene> Registration { get; } = new();
 
-        public required string Body { get; set; }
-        public string Name { get; set; } = "";
-        public List<Act> Acts { get; init; } = [];
+        public abstract string Body { get; set; }
+        public virtual List<Act> Acts { get; } = [];
 
         public EngineEventHandler OnStart { get; } = new();
 
